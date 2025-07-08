@@ -26,6 +26,35 @@ class StaticLengthNode(TypeNode[int]):
         return 0
 
 
+@dataclass(frozen=True)
+class MemberLengthNode(TypeNode[int]):
+    """
+    Returns the value of the member with the given name.
+    """
+
+    member_name: str
+
+    def _get_member_value(self, context) -> int:
+        value = context.get(self.member_name, None)
+        assert isinstance(value, int), (
+            f"Member {self.member_name} was not an int or did not exist"
+        )
+
+        return value
+
+    def read_from(self, reader, context=None):
+        assert isinstance(context, dict), "Context was not a dictionary of values"
+        return self._get_member_value(context)
+
+    def write_to(self, value, writer, context=None):
+        expected_length = self._get_member_value(context)
+        assert value == expected_length, (
+            f"Expected {expected_length} values, got {value} values"
+        )
+
+        return 0
+
+
 @dataclass(init=False, frozen=True)
 class PrimitiveNode[T](TypeNode[T]):
     """Primitive types are directly parsable and mapped to C types.
@@ -333,7 +362,6 @@ __all__ = (
     "ClassNode",
     "StructNode",
     "BytesNode",
-    "StaticLengthNode",
     "U8Node",
     "U16Node",
     "U32Node",
@@ -347,4 +375,6 @@ __all__ = (
     "F64Node",
     "EnumNode",
     "ConvertNode",
+    "StaticLengthNode",
+    "MemberLengthNode",
 )

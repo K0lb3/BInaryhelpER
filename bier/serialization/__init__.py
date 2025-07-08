@@ -3,7 +3,6 @@ from .BinarySerializable import (
 )
 from .builtin_aliases import (
     bytes_d,
-    default_length_encoding,
     list_d,
     str_d,
 )
@@ -24,9 +23,10 @@ from .builtins import (
 from .options import (
     convert,
     custom,
-    length_type,
     member,
+    prefixed_length,
     static_length,
+    member_length,
 )
 from .TypeNode import (
     ClassNode,
