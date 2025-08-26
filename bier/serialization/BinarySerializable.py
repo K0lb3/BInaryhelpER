@@ -8,6 +8,7 @@ from typing import (
     Self,
     get_args,
     get_type_hints,
+    ClassVar,
 )
 
 from ._typing_helpers import get_origin_type, resolve_genericalias
@@ -159,7 +160,10 @@ def parse_annotation(annotation: Any, options: BinarySerializableOptions) -> Typ
             value_type = parse_enum_base_type(annotation)
             return EnumNode(annotation, parse_annotation(value_type, options))
 
-    if get_origin_type(annotation.__value__) is custom:
+    if (
+        hasattr(annotation, "__value__")
+        and get_origin_type(annotation.__value__) is custom
+    ):
         return parse_annotation(
             resolve_genericalias(origin, args),
             options=options,
@@ -195,8 +199,15 @@ def build_type_node[T: BinarySerializable](cls: type[T]) -> ClassNode[T]:
     # get default options from the class
     serialization_options = get_type_serialization_options(cls)
 
-    # get all member type hintss
+    # get all member type hints
     type_hints = get_type_hints(cls, include_extras=True)
+
+    # filter out class var members
+    type_hints = {
+        name: value
+        for name, value in type_hints.items()
+        if get_origin_type(value) is not ClassVar
+    }
 
     names = tuple(type_hints.keys())
     nodes = tuple(
